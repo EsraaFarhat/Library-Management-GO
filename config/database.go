@@ -7,6 +7,8 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"library-management/internal/models"
 )
 
 var DB *gorm.DB
@@ -27,6 +29,18 @@ func ConnectDatabase() {
 	}
 
 	fmt.Println("✅ Database connected successfully")
+
+	// **Run Migrations**
+	err = database.AutoMigrate(
+		&models.User{},
+		&models.Book{},
+		&models.Borrow{},
+	)
+	if err != nil {
+		log.Fatal("❌ Failed to migrate database:", err)
+	}
+
+	fmt.Println("✅ Database migrated successfully")
 
 	DB = database
 }
