@@ -1,0 +1,15 @@
+# Binary files
+/tmp/
+
+# Air (Live Reloading)
+.air.toml
+.air.env
+.air.debug
+
+# Go Modules & Dependencies
+go.sum
+go.mod
+
+# Environment Variables
+.env
+.env.*
