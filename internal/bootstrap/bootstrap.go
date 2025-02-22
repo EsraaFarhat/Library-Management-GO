@@ -20,8 +20,12 @@ func SetupServer() *gin.Engine {
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	// Register routes
 	routes.SetupUserRoutes(r, userHandler)
+	routes.SetupAuthRoutes(r, authHandler)
 
 	return r
 }

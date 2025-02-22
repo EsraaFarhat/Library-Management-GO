@@ -23,10 +23,10 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 
 // Create User (with hashed password)
 func (s *UserService) CreateUser(req dto.UserCreateRequest) (*models.User, error) {
-	user := utils.ToUser(req)
+	user := utils.MapCreateRequestToUser(req)
 
 	// Validate struct
-	if err := validate.Struct(user); err != nil {
+	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			return nil, utils.FormatValidationErrors(validationErrors)
@@ -72,7 +72,7 @@ func (s *UserService) UpdateUser(id uint, req dto.UserUpdateRequest) (*models.Us
 	utils.UpdateUserFromDTO(user, req)
 
 	// Validate struct
-	if err := validate.Struct(user); err != nil {
+	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			return nil, utils.FormatValidationErrors(validationErrors)

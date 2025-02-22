@@ -32,6 +32,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	createdUser, err := h.Service.CreateUser(req)
 
 	if err != nil {
+		// Handle known constant errors
 		// Check if the error is a validation error
 		var validationErr *utils.ValidationError
 		if errors.As(err, &validationErr) {
@@ -40,7 +41,6 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			return
 		}
 
-		// Handle known constant errors
 		if errors.Is(err, constants.ErrEmailTaken) {
 			utils.RespondWithError(c, http.StatusConflict, constants.ErrEmailTaken)
 			return
@@ -87,17 +87,32 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	user, err := h.Service.UpdateUser(uint(id), req)
 	if err != nil {
-		switch {
-		case errors.Is(err, constants.ErrUserNotFound):
-			utils.RespondWithError(c, http.StatusNotFound, constants.ErrUserNotFound)
-		case errors.Is(err, constants.ErrInvalidInput):
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
-		case errors.Is(err, constants.ErrEmailTaken):
-			utils.RespondWithError(c, http.StatusConflict, constants.ErrEmailTaken)
-		default:
-			utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		// Handle known constant errors
+		// Check if the error is a validation error
+		var validationErr *utils.ValidationError
+		if errors.As(err, &validationErr) {
+
+			utils.RespondWithError(c, http.StatusBadRequest, validationErr) // Return validation errors
+			return
 		}
+
+		if errors.Is(err, constants.ErrUserNotFound) {
+			utils.RespondWithError(c, http.StatusNotFound, constants.ErrUserNotFound)
+			return
+		}
+		if errors.Is(err, constants.ErrInvalidInput) {
+			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+			return
+		}
+		if errors.Is(err, constants.ErrEmailTaken) {
+			utils.RespondWithError(c, http.StatusConflict, constants.ErrEmailTaken)
+			return
+		}
+
+		// Unexpected errors
+		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
 		return
+
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, user)
