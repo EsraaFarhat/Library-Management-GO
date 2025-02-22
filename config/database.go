@@ -13,7 +13,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDatabase() {
+func ConnectDatabase() *gorm.DB {
 	// Construct DSN from environment variables
 	dsn := "host=" + os.Getenv("DB_HOST") +
 		" user=" + os.Getenv("DB_USER") +
@@ -43,4 +43,6 @@ func ConnectDatabase() {
 	fmt.Println("✅ Database migrated successfully")
 
 	DB = database
+
+	return DB
 }

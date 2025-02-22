@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"library-management/config"
+	"library-management/internal/bootstrap"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
@@ -24,16 +23,7 @@ func main() {
 		port = "8080"
 	}
 
-	// Connect to the database
-	config.ConnectDatabase()
-
-	r := mux.NewRouter()
-
-	// Health check route
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Server is running 🚀"))
-	}).Methods("GET")
+	r := bootstrap.SetupServer()
 
 	fmt.Printf("🚀 Server running on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
