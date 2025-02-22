@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"errors"
+	"library-management/internal/constants"
 	"os"
 	"time"
 
@@ -38,4 +40,29 @@ func GenerateToken(userID uint, role string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+// ValidateToken verifies a JWT token and returns claims if valid
+func ValidateToken(tokenString string) (*Claims, error) {
+	jwtSecret := []byte(os.Getenv("SECRET_KEY")) // Fetch dynamically
+
+	// Parse the token
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract claims
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, constants.ErrInvalidOrExpiredToken
 }
