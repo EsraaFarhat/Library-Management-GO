@@ -29,7 +29,8 @@ func (s *UserService) CreateUser(req dto.UserCreateRequest) (*models.User, error
 	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return nil, utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &user)
+			return nil, formattedError
 		}
 		return nil, err
 	}
@@ -75,7 +76,8 @@ func (s *UserService) UpdateUser(id uint, req dto.UserUpdateRequest) (*models.Us
 	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return nil, utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &user)
+			return nil, formattedError
 		}
 		return nil, err
 	}

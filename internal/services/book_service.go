@@ -27,7 +27,8 @@ func (s *BookService) CreateBook(req dto.BookCreateRequest) (*models.Book, error
 	// Validate struct
 	if err := bookValidator.Struct(req); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return nil, utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &book)
+			return nil, formattedError
 		}
 		return nil, err
 	}
@@ -69,7 +70,8 @@ func (s *BookService) UpdateBook(id uint, req dto.BookUpdateRequest) (*models.Bo
 	// Validate struct
 	if err := bookValidator.Struct(req); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return nil, utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &book)
+			return nil, formattedError
 		}
 		return nil, err
 	}

@@ -24,7 +24,8 @@ func (s *AuthService) Register(req dto.UserRegisterRequest) (string, error) {
 	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return "", utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &req)
+			return "", formattedError
 		}
 		return "", err
 	}
@@ -64,7 +65,8 @@ func (s *AuthService) Login(req dto.UserLoginRequest) (string, error) {
 	if err := validate.Struct(req); err != nil {
 		// Extract validation errors and return the first error
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			return "", utils.FormatValidationErrors(validationErrors)
+			formattedError := utils.FormatValidationErrors(validationErrors, &user)
+			return "", formattedError
 		}
 		return "", err
 	}

@@ -30,6 +30,11 @@ var (
 	ErrISBNExists          = errors.New("isbn is already registered")
 )
 
+// Borrow Errors
+var (
+	ErrBorrowNotFound        = errors.New("borrow not found")
+)
+
 // Validation Errors
 var (
 	ErrInvalidInput = errors.New("invalid input data")

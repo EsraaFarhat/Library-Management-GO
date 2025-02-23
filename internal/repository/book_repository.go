@@ -54,12 +54,12 @@ func (r *BookRepository) GetAll(page, limit int) ([]models.Book, int64, error) {
 
 // Get Book by ISBN
 func (r *BookRepository) GetByISBN(isbn string) (*models.Book, error) {
-	var user models.Book
-	err := r.DB.Where("isbn = ?", isbn).First(&user).Error
+	var book models.Book
+	err := r.DB.Where("isbn = ?", isbn).First(&book).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, constants.ErrBookNotFound
 	}
-	return &user, err
+	return &book, err
 }
 
 // Update Book
@@ -70,4 +70,25 @@ func (r *BookRepository) Update(book *models.Book) error {
 // Delete Book
 func (r *BookRepository) Delete(id uint) error {
 	return r.DB.Delete(&models.Book{}, id).Error
+}
+
+func (r *BookRepository) DecreaseBookCopies(bookID uint) error {
+    book, err := r.GetByID(bookID)
+    if err != nil {
+        return err
+    }
+    // if book.CopiesAvailable < copies {
+    //     return errors.New("not enough copies available")
+    // }
+    book.CopiesAvailable -= 1
+    return r.DB.Save(&book).Error
+}
+
+func (r *BookRepository) IncreaseBookCopies(bookID uint) error {
+    book, err := r.GetByID(bookID)
+    if err != nil {
+        return err
+    }
+    book.CopiesAvailable += 1
+    return r.DB.Save(&book).Error
 }
