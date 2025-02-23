@@ -20,6 +20,16 @@ var (
 	ErrInvalidUserRole = errors.New("invalid user role")
 )
 
+// Book Errors
+var (
+	ErrInvalidBookID       = errors.New("invalid book id")
+	ErrBookNotFound        = errors.New("book not found")
+	ErrBookAlreadyBorrowed = errors.New("book is already borrowed")
+	ErrBookLimitExceeded   = errors.New("borrow limit exceeded")
+	ErrNoCopiesAvailable   = errors.New("no copies available")
+	ErrISBNExists          = errors.New("isbn is already registered")
+)
+
 // Validation Errors
 var (
 	ErrInvalidInput = errors.New("invalid input data")

@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -21,7 +20,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		log.Println(authHeader)
 
 		// Extract token
 		token := strings.TrimPrefix(authHeader, "Bearer ")

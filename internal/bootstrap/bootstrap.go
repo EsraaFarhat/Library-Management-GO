@@ -23,9 +23,14 @@ func SetupServer() *gin.Engine {
 	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 
+	bookRepo := repository.NewBookRepository(db)
+	bookService := services.NewBookService(bookRepo)
+	bookHandler := handlers.NewBookHandler(bookService)
+
 	// Register routes
 	routes.SetupUserRoutes(r, userHandler)
 	routes.SetupAuthRoutes(r, authHandler)
+	routes.SetupBookRoutes(r, bookHandler)
 
 	return r
 }
