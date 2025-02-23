@@ -19,3 +19,13 @@ type BookUpdateRequest struct {
 	CopiesAvailable *int       `json:"copies_available,omitempty" validate:"omitempty,min=1"`
 	PublishedAt     *time.Time `json:"published_at,omitempty"`
 }
+
+// BookResponse represents the output for book-related endpoints.
+type BookResponse struct {
+	ID              uint      `json:"id"`
+	Title           string    `json:"title"`
+	Author          string    `json:"author"`
+	ISBN            string    `json:"isbn"`
+	CopiesAvailable int       `json:"copies_available"`
+	PublishedAt     time.Time `json:"published_at"`
+}

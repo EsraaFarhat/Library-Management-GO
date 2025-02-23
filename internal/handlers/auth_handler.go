@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"errors"
-	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/services"
-	"library-management/internal/utils"
+	"library-management/internal/utils/error_handlers"
+	"library-management/internal/utils/handlers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,62 +21,32 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 // Register a new user
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.UserRegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
-	token, err := h.Service.Register(req)
+	token, user, err := h.Service.Register(req)
 	if err != nil {
-		// Check if the error is a validation error
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr) // Return validation errors
-			return
-		}
-
-		// Handle known constant errors
-		if errors.Is(err, constants.ErrEmailTaken) {
-			utils.RespondWithError(c, http.StatusConflict, constants.ErrEmailTaken)
-			return
-		}
-
-		// Unexpected errors
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleAuthError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusCreated, map[string]interface{}{"token": token})
+	handlers.RespondWithSuccess(c, http.StatusCreated, map[string]interface{}{"token": token, "user": user})
 }
 
 // Login User
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.UserLoginRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	token, err := h.Service.Login(req)
+	token, user, err := h.Service.Login(req)
 	if err != nil {
-		// Handle known constant errors
-		// Check if the error is a validation error
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr) // Return validation errors
-			return
-		}
-
-		if errors.Is(err, constants.ErrInvalidCredentials) {
-			utils.RespondWithError(c, http.StatusUnauthorized, constants.ErrInvalidCredentials)
-			return
-		}
-
-		// Unexpected errors
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleAuthError(c, err)
 		return
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{"token": token})
+	handlers.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{"token": token, "user": user})
 }

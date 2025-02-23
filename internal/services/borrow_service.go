@@ -1,50 +1,38 @@
 package services
 
 import (
+	"errors"
 	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/models"
 	"library-management/internal/repository"
-	"library-management/internal/utils"
-	"log"
-	"github.com/go-playground/validator/v10"
-	"errors"
 )
 
-var borrowValidator = validator.New()
-
 type BorrowService struct {
-    BorrowRepo *repository.BorrowRepository
-    BookRepo   *repository.BookRepository
-    UserRepo   *repository.UserRepository
+	BorrowRepo *repository.BorrowRepository
+	BookRepo   *repository.BookRepository
+	UserRepo   *repository.UserRepository
 }
 
 func NewBorrowService(borrowRepo *repository.BorrowRepository, bookRepo *repository.BookRepository, userRepo *repository.UserRepository) *BorrowService {
-    return &BorrowService{
-        BorrowRepo: borrowRepo,
-        BookRepo:   bookRepo,
-        UserRepo:   userRepo,
-    }
+	return &BorrowService{
+		BorrowRepo: borrowRepo,
+		BookRepo:   bookRepo,
+		UserRepo:   userRepo,
+	}
 }
+
 // BorrowBook handles borrowing a book
 func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow, error) {
-	// Validate struct
-	if err := borrowValidator.Struct(req); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			formattedError := utils.FormatValidationErrors(validationErrors, &req)
-			return nil, formattedError
-		}
-		return nil, err
-	}
 
 	// Check if the user exists
-	_, err := s.UserRepo.GetByID(req.UserID)
+	_, err := s.UserRepo.GetByID(req.UserID, []string{"id"})
 	if err != nil {
 		return nil, constants.ErrUserNotFound
 	}
 
 	// Check if the book exists
-	book, err := s.BookRepo.GetByID(req.BookID)
+	book, err := s.BookRepo.GetByID(req.BookID, nil)
 	if err != nil {
 		return nil, constants.ErrBookNotFound
 	}
@@ -70,7 +58,7 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow,
 	// Start transaction
 	tx := s.BorrowRepo.DB.Begin()
 
-	if err := s.BorrowRepo.CreateBorrowRecord(borrow); err != nil {
+	if err := s.BorrowRepo.Create(borrow); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -86,20 +74,10 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow,
 
 // ReturnBook handles returning a borrowed book
 func (s *BorrowService) ReturnBook(req dto.ReturnRequest) error {
-	// Validate struct
-	if err := borrowValidator.Struct(req); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			formattedError := utils.FormatValidationErrors(validationErrors, &req)
-			return formattedError
-		}
-		return err
-	}
-	log.Println(req)
 
 	// Check if borrow record exists
 	borrow, err := s.BorrowRepo.GetBorrowRecord(req.UserID, req.BookID)
 	if err != nil {
-		log.Println(err)
 		return constants.ErrBorrowNotFound
 	}
 
@@ -107,8 +85,7 @@ func (s *BorrowService) ReturnBook(req dto.ReturnRequest) error {
 	tx := s.BorrowRepo.DB.Begin()
 
 	// Delete the borrow record
-	if err := s.BorrowRepo.DeleteBorrowRecord(borrow); err != nil {
-		log.Println(err)
+	if err := s.BorrowRepo.Delete(borrow); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -124,11 +101,63 @@ func (s *BorrowService) ReturnBook(req dto.ReturnRequest) error {
 }
 
 // GetBorrowRecords retrieves all borrow records with pagination
-func (s *BorrowService) GetBorrowRecords(page, limit int) ([]models.Borrow, int64, error) {
-	return s.BorrowRepo.GetAll(page, limit)
+func (s *BorrowService) GetBorrowRecords(page, limit int) ([]dto.BorrowResponse, int64, error) {
+	// Fetch borrows from the repository
+	borrows, total, err := s.BorrowRepo.GetAll(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Map each models.Borrow to dto.BorrowResponse
+	borrowResponses := make([]dto.BorrowResponse, len(borrows))
+	for i, borrow := range borrows {
+		borrowResponses[i] = dto.BorrowResponse{
+			ID:      borrow.ID,
+			DueDate: borrow.DueDate,
+			User: &dto.UserResponse{
+				ID:    borrow.User.ID,
+				Name:  borrow.User.Name,
+				Email: borrow.User.Email,
+				Role:  borrow.User.Role,
+			},
+			Book: &dto.BookResponse{
+				ID:              borrow.Book.ID,
+				Title:           borrow.Book.Title,
+				Author:          borrow.Book.Author,
+				ISBN:            borrow.Book.ISBN,
+				CopiesAvailable: borrow.Book.CopiesAvailable,
+				PublishedAt:     borrow.Book.PublishedAt,
+			},
+		}
+	}
+
+	return borrowResponses, total, nil
 }
 
 // GetUserBorrows retrieves borrow records for a specific user
-func (s *BorrowService) GetUserBorrows(userID uint) ([]models.Borrow, error) {
-	return s.BorrowRepo.GetBorrowsByUserID(userID)
+func (s *BorrowService) GetUserBorrows(userID uint, page, limit int) ([]dto.BorrowResponse, int64, error) {
+	// Fetch borrows from the repository
+	borrows, total, err := s.BorrowRepo.GetBorrowsByUserID(userID, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Map each models.Borrow to dto.BorrowResponse
+	borrowResponses := make([]dto.BorrowResponse, len(borrows))
+	for i, borrow := range borrows {
+		borrowResponses[i] = dto.BorrowResponse{
+			ID:      borrow.ID,
+			DueDate: borrow.DueDate,
+			Book: &dto.BookResponse{
+				ID:              borrow.Book.ID,
+				Title:           borrow.Book.Title,
+				Author:          borrow.Book.Author,
+				ISBN:            borrow.Book.ISBN,
+				CopiesAvailable: borrow.Book.CopiesAvailable,
+				PublishedAt:     borrow.Book.PublishedAt,
+			},
+		}
+	}
+
+	return borrowResponses, total, nil
 }

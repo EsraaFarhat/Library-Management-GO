@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"errors"
 	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/services"
-	"library-management/internal/utils"
+	"library-management/internal/utils/error_handlers"
+	"library-management/internal/utils/handlers"
 	"net/http"
 	"strconv"
 
@@ -23,69 +23,33 @@ func NewBorrowHandler(service *services.BorrowService) *BorrowHandler {
 // BorrowBook handles borrowing a book
 func (h *BorrowHandler) BorrowBook(c *gin.Context) {
 	var req dto.BorrowCreateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	borrow, err := h.Service.BorrowBook(req)
 	if err != nil {
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr)
-			return
-		}
-		if errors.Is(err, constants.ErrUserNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrUserNotFound)
-			return
-		}
-		if errors.Is(err, constants.ErrBookNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrBookNotFound)
-			return
-		}
-
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBorrowError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusCreated, borrow)
+	handlers.RespondWithSuccess(c, http.StatusCreated, borrow)
 }
 
 // ReturnBook handles returning a borrowed book
 func (h *BorrowHandler) ReturnBook(c *gin.Context) {
 	var req dto.ReturnRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err := h.Service.ReturnBook(req)
 	if err != nil {
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr)
-			return
-		}
-		if errors.Is(err, constants.ErrUserNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrUserNotFound)
-			return
-		}
-		if errors.Is(err, constants.ErrBookNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrBookNotFound)
-			return
-		}
-		if errors.Is(err, constants.ErrUserNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrUserNotFound)
-			return
-		}
-		if errors.Is(err, constants.ErrBorrowNotFound) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrBorrowNotFound)
-			return
-		}
-
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBorrowError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusOK, "Book returned successfully")
+	handlers.RespondWithSuccess(c, http.StatusOK, "Book returned successfully")
 }
 
 // GetBorrowRecords retrieves all borrow records with pagination
@@ -95,7 +59,7 @@ func (h *BorrowHandler) GetBorrowRecords(c *gin.Context) {
 
 	records, total, err := h.Service.GetBorrowRecords(page, limit)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBorrowError(c, err)
 		return
 	}
 
@@ -105,22 +69,33 @@ func (h *BorrowHandler) GetBorrowRecords(c *gin.Context) {
 		"page":  page,
 		"limit": limit,
 	}
-	utils.RespondWithSuccess(c, http.StatusOK, response)
+	handlers.RespondWithSuccess(c, http.StatusOK, response)
 }
 
 // GetUserBorrows retrieves borrow records for a specific user
 func (h *BorrowHandler) GetUserBorrows(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidUserID)
+		handlers.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidUserID)
 		return
 	}
 
-	borrows, err := h.Service.GetUserBorrows(uint(userID))
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	borrows, total, err := h.Service.GetUserBorrows(uint(userID), page, limit)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBorrowError(c, err)
 		return
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, borrows)
+	// Respond with pagination metadata
+	response := map[string]interface{}{
+		"rows":  borrows,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	}
+	handlers.RespondWithSuccess(c, http.StatusOK, response)
 }

@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var defaultBookFields = []string{"id", "title", "author", "isbn", "copies_available", "published_at"}
+
 type BookRepository struct {
 	DB *gorm.DB
 }
@@ -23,9 +25,19 @@ func (r *BookRepository) Create(book *models.Book) (*models.Book, error) {
 }
 
 // Get Book by ID
-func (r *BookRepository) GetByID(id uint) (*models.Book, error) {
+func (r *BookRepository) GetByID(id uint, fields []string) (*models.Book, error) {
 	var book models.Book
-	err := r.DB.First(&book, id).Error
+	// Start with a base query
+	query := r.DB.Model(&models.Book{})
+
+	// Use default fields if no specific fields are provided
+	if len(fields) == 0 {
+		fields = defaultBookFields
+	}
+	// Select specific fields
+	query = query.Select(fields)
+
+	err := query.First(&book, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, constants.ErrBookNotFound
 	}
@@ -33,19 +45,30 @@ func (r *BookRepository) GetByID(id uint) (*models.Book, error) {
 }
 
 // Get All Books
-func (r *BookRepository) GetAll(page, limit int) ([]models.Book, int64, error) {
+func (r *BookRepository) GetAll(page, limit int, fields []string) ([]models.Book, int64, error) {
 	var books []models.Book
 	var total int64
 
-	// Count total books
-	r.DB.Model(&models.Book{}).Count(&total)
+	// Start with a base query
+	query := r.DB.Model(&models.Book{})
+
+	// Use default fields if no specific fields are provided
+	if len(fields) == 0 {
+		fields = defaultBookFields
+	}
+	// Select specific fields
+	query = query.Select(fields)
+
+	// Count total books (without pagination)
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	// Pagination logic
 	offset := (page - 1) * limit
 
 	// Fetch books with pagination and sorting
-	err := r.DB.Order("created_at DESC").Limit(limit).Offset(offset).Find(&books).Error
-	if err != nil {
+	if err := query.Order("created_at DESC").Limit(limit).Offset(offset).Find(&books).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -73,22 +96,22 @@ func (r *BookRepository) Delete(id uint) error {
 }
 
 func (r *BookRepository) DecreaseBookCopies(bookID uint) error {
-    book, err := r.GetByID(bookID)
-    if err != nil {
-        return err
-    }
-    // if book.CopiesAvailable < copies {
-    //     return errors.New("not enough copies available")
-    // }
-    book.CopiesAvailable -= 1
-    return r.DB.Save(&book).Error
+	book, err := r.GetByID(bookID, nil)
+	if err != nil {
+		return err
+	}
+	// if book.CopiesAvailable < copies {
+	//     return errors.New("not enough copies available")
+	// }
+	book.CopiesAvailable -= 1
+	return r.DB.Save(&book).Error
 }
 
 func (r *BookRepository) IncreaseBookCopies(bookID uint) error {
-    book, err := r.GetByID(bookID)
-    if err != nil {
-        return err
-    }
-    book.CopiesAvailable += 1
-    return r.DB.Save(&book).Error
+	book, err := r.GetByID(bookID, nil)
+	if err != nil {
+		return err
+	}
+	book.CopiesAvailable += 1
+	return r.DB.Save(&book).Error
 }

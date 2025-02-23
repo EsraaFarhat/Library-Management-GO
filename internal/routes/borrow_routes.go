@@ -13,6 +13,7 @@ func SetupBorrowRoutes(r *gin.Engine, borrowHandler *handlers.BorrowHandler) {
 		borrowRoutes.Use(middlewares.AuthMiddleware())
 
 		borrowRoutes.POST("/", borrowHandler.BorrowBook)
+		borrowRoutes.GET("/", borrowHandler.GetBorrowRecords)
 		borrowRoutes.POST("/return", borrowHandler.ReturnBook)
 		borrowRoutes.GET("/user/:user_id", borrowHandler.GetUserBorrows)
 	}

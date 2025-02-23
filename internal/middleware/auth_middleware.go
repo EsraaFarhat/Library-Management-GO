@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	"library-management/internal/constants"
-	"library-management/internal/utils"
+	"library-management/internal/utils/auth"
+	"library-management/internal/utils/handlers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +17,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 
-			utils.RespondWithError(c, http.StatusUnauthorized, constants.ErrMissingAuthHeader)
+			handlers.RespondWithError(c, http.StatusUnauthorized, constants.ErrMissingAuthHeader)
 			c.Abort()
 			return
 		}
@@ -24,15 +25,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Extract token
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if token == "" {
-			utils.RespondWithError(c, http.StatusUnauthorized, constants.ErrInvalidTokenFormat)
+			handlers.RespondWithError(c, http.StatusUnauthorized, constants.ErrInvalidTokenFormat)
 			c.Abort()
 			return
 		}
 
 		// Verify token
-		claims, err := utils.ValidateToken(token)
+		claims, err := auth.ValidateToken(token)
 		if err != nil {
-			utils.RespondWithError(c, http.StatusUnauthorized, constants.ErrInvalidOrExpiredToken)
+			handlers.RespondWithError(c, http.StatusUnauthorized, constants.ErrInvalidOrExpiredToken)
 			c.Abort()
 			return
 		}

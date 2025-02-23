@@ -1,4 +1,4 @@
-package utils
+package mappers
 
 import (
 	"library-management/internal/dto"
@@ -30,16 +30,16 @@ func MapLoginRequestToUser(req dto.UserLoginRequest) *models.User {
 }
 
 func UpdateUserFromDTO(user *models.User, req dto.UserUpdateRequest) {
-	if req.Name != "" {
-		user.Name = req.Name
+	if req.Name != nil {
+		user.Name = *req.Name
 	}
-	if req.Email != "" {
-		user.Email = req.Email
+	if req.Email != nil {
+		user.Email = *req.Email
 	}
-	if req.Password != "" {
-		user.Password = req.Password
+	if req.Password != nil {
+		user.Password = *req.Password
 	}
-	if req.Role != "" {
-		user.Role = req.Role
+	if req.Role != nil {
+		user.Role = *req.Role
 	}
 }

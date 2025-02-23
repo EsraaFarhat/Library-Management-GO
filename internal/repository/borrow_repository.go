@@ -3,8 +3,9 @@ package repository
 import (
 	"errors"
 
-	"gorm.io/gorm"
 	"library-management/internal/models"
+
+	"gorm.io/gorm"
 )
 
 type BorrowRepository struct {
@@ -14,8 +15,9 @@ type BorrowRepository struct {
 func NewBorrowRepository(db *gorm.DB) *BorrowRepository {
 	return &BorrowRepository{DB: db}
 }
+
 // Create a new borrow record
-func (r *BorrowRepository) CreateBorrowRecord(borrow *models.Borrow) error {
+func (r *BorrowRepository) Create(borrow *models.Borrow) error {
 	return r.DB.Create(borrow).Error
 }
 
@@ -31,7 +33,8 @@ func (r *BorrowRepository) GetAll(page, limit int) ([]models.Borrow, int64, erro
 	offset := (page - 1) * limit
 
 	// Fetch borrows with pagination and sorting
-	err := r.DB.Order("created_at DESC").Limit(limit).Offset(offset).Find(&borrows).Error
+	err := r.DB.Order("created_at DESC").Limit(limit).Offset(offset).Preload("Book").
+		Preload("User").Find(&borrows).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -50,16 +53,31 @@ func (r *BorrowRepository) GetBorrowRecord(userID, bookID uint) (*models.Borrow,
 }
 
 // Delete a borrow record when a book is returned
-func (r *BorrowRepository) DeleteBorrowRecord(borrow *models.Borrow) error {
+func (r *BorrowRepository) Delete(borrow *models.Borrow) error {
 	return r.DB.Delete(borrow).Error
 }
 
 // GetBorrowsByUserID retrieves borrow records for a specific user
-func (r *BorrowRepository) GetBorrowsByUserID(userID uint) ([]models.Borrow, error) {
+func (r *BorrowRepository) GetBorrowsByUserID(userID uint, page, limit int) ([]models.Borrow, int64, error) {
 	var borrows []models.Borrow
-	err := r.DB.Where("user_id = ?", userID).Find(&borrows).Error
-	if err != nil {
-		return nil, err
+	var total int64
+
+	// Count total borrows for the user
+	if err := r.DB.Model(&models.Borrow{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return borrows, nil
+
+	// Fetch borrows with pagination and preload book and user details
+	offset := (page - 1) * limit
+	err := r.DB.Where("user_id = ?", userID).
+		Offset(offset).
+		Limit(limit).
+		Preload("Book").
+		// Preload("User").
+		Find(&borrows).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return borrows, total, nil
 }

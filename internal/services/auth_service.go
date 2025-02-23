@@ -4,10 +4,9 @@ import (
 	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/repository"
-	"library-management/internal/utils"
+	"library-management/internal/utils/auth"
+	"library-management/internal/utils/mappers"
 	"strings"
-
-	"github.com/go-playground/validator/v10"
 )
 
 type AuthService struct {
@@ -19,68 +18,61 @@ func NewAuthService(repo *repository.UserRepository) *AuthService {
 }
 
 // Create User (with hashed password)
-func (s *AuthService) Register(req dto.UserRegisterRequest) (string, error) {
-	// Validate struct
-	if err := validate.Struct(req); err != nil {
-		// Extract validation errors and return the first error
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			formattedError := utils.FormatValidationErrors(validationErrors, &req)
-			return "", formattedError
-		}
-		return "", err
-	}
+func (s *AuthService) Register(req dto.UserRegisterRequest) (string, dto.UserResponse, error) {
 
-	user := utils.MapRegisterRequestToUser(req)
+	user := mappers.MapRegisterRequestToUser(req)
 	// Convert email to lowercase
 	user.Email = strings.ToLower(user.Email)
 
 	// Check if the email already exists
-	existingUser, _ := s.Repo.GetByEmail(user.Email)
+	existingUser, _ := s.Repo.GetByEmail(user.Email, []string{"id"})
 	if existingUser != nil {
-		return "", constants.ErrEmailTaken
+		return "", dto.UserResponse{}, constants.ErrEmailTaken
 	}
 
 	// Hash password before saving
-	hashedPassword, err := utils.HashPassword(user.Password)
+	hashedPassword, err := auth.HashPassword(user.Password)
 	if err != nil {
-		return "", err
+		return "", dto.UserResponse{}, err
 	}
 	user.Password = hashedPassword
 
 	// Save to DB
 	user, err = s.Repo.Create(user)
 	if err != nil {
-		return "", err
+		return "", dto.UserResponse{}, err
 	}
 
 	// Generate JWT token
-	return utils.GenerateToken(user.ID, user.Role)
+	token, err := auth.GenerateToken(user.ID, user.Role)
+	if err != nil {
+		return "", dto.UserResponse{}, err
+	}
+	// Map user to response DTO
+	userResponse := mappers.MapUserToResponse(user)
+	return token, userResponse, nil
 }
 
 // Login (returns user if successful)
-func (s *AuthService) Login(req dto.UserLoginRequest) (string, error) {
-	user := utils.MapLoginRequestToUser(req)
+func (s *AuthService) Login(req dto.UserLoginRequest) (string, dto.UserResponse, error) {
+	user := mappers.MapLoginRequestToUser(req)
 
-	// Validate struct
-	if err := validate.Struct(req); err != nil {
-		// Extract validation errors and return the first error
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			formattedError := utils.FormatValidationErrors(validationErrors, &user)
-			return "", formattedError
-		}
-		return "", err
-	}
-
-	user, err := s.Repo.GetByEmail(user.Email)
+	user, err := s.Repo.GetByEmail(user.Email, []string{"id", "name", "email", "password", "role", "created_at"})
 	if err != nil {
-		return "", constants.ErrInvalidCredentials
+		return "", dto.UserResponse{}, constants.ErrInvalidCredentials
 	}
 
 	// Verify password
-	if !utils.CheckPasswordHash(req.Password, user.Password) {
-		return "", constants.ErrInvalidCredentials
+	if !auth.CheckPasswordHash(req.Password, user.Password) {
+		return "", dto.UserResponse{}, constants.ErrInvalidCredentials
 	}
 
 	// Generate JWT token
-	return utils.GenerateToken(user.ID, user.Role)
+	token, err := auth.GenerateToken(user.ID, user.Role)
+	if err != nil {
+		return "", dto.UserResponse{}, err
+	}
+	// Map user to response DTO
+	userResponse := mappers.MapUserToResponse(user)
+	return token, userResponse, nil
 }

@@ -1,4 +1,4 @@
-package utils
+package mappers
 
 import (
 	"library-management/internal/dto"

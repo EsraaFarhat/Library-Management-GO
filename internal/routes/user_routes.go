@@ -14,6 +14,7 @@ func SetupUserRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
 		userRoutes.Use(middlewares.RoleMiddleware("admin"))
 
 		userRoutes.POST("/", userHandler.CreateUser)
+		userRoutes.GET("/", userHandler.GetAllUsers)
 		userRoutes.GET("/:id", userHandler.GetUser)
 		userRoutes.PUT("/:id", userHandler.UpdateUser)
 		userRoutes.DELETE("/:id", userHandler.DeleteUser)

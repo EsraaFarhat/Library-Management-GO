@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"errors"
 	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/services"
-	"library-management/internal/utils"
+	"library-management/internal/utils/error_handlers"
+	"library-management/internal/utils/handlers"
 	"net/http"
 	"strconv"
 
@@ -23,27 +23,17 @@ func NewBookHandler(service *services.BookService) *BookHandler {
 // Create a new book
 func (h *BookHandler) CreateBook(c *gin.Context) {
 	var req dto.BookCreateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	createdBook, err := h.Service.CreateBook(req)
 	if err != nil {
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr)
-			return
-		}
-		if errors.Is(err, constants.ErrISBNExists) {
-			utils.RespondWithError(c, http.StatusConflict, constants.ErrISBNExists)
-			return
-		}
-
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBookError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusCreated, createdBook)
+	handlers.RespondWithSuccess(c, http.StatusCreated, createdBook)
 }
 
 // Get all books
@@ -53,9 +43,9 @@ func (h *BookHandler) GetAllBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
 	// Fetch paginated books
-	books, total, err := h.Service.GetAllBooks(page, limit)
+	books, total, err := h.Service.GetAllBooks(page, limit, nil)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBookError(c, err)
 		return
 	}
 
@@ -67,7 +57,7 @@ func (h *BookHandler) GetAllBooks(c *gin.Context) {
 		"limit": limit,
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, response)
+	handlers.RespondWithSuccess(c, http.StatusOK, response)
 }
 
 // Get Book by ID
@@ -75,16 +65,16 @@ func (h *BookHandler) GetBook(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
+		handlers.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
 		return
 	}
 
-	book, err := h.Service.GetBook(uint(id))
+	book, err := h.Service.GetBook(uint(id), []string{})
 	if err != nil {
-		utils.RespondWithError(c, http.StatusNotFound, constants.ErrBookNotFound)
+		handlers.RespondWithError(c, http.StatusNotFound, constants.ErrBookNotFound)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusOK, book)
+	handlers.RespondWithSuccess(c, http.StatusOK, book)
 }
 
 // Update Book
@@ -92,41 +82,22 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
+		handlers.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
 		return
 	}
 
 	var req dto.BookUpdateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
+	if err := handlers.BindAndValidate(c, &req); err != nil {
+		handlers.RespondWithError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	book, err := h.Service.UpdateBook(uint(id), req)
 	if err != nil {
-		var validationErr *utils.ValidationError
-		if errors.As(err, &validationErr) {
-			utils.RespondWithError(c, http.StatusBadRequest, validationErr)
-			return
-		}
-		if errors.Is(err, constants.ErrBookNotFound) {
-			utils.RespondWithError(c, http.StatusNotFound, constants.ErrBookNotFound)
-			return
-		}
-		if errors.Is(err, constants.ErrInvalidInput) {
-			utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidInput)
-			return
-		}
-
-		if errors.Is(err, constants.ErrISBNExists) {
-			utils.RespondWithError(c, http.StatusConflict, constants.ErrISBNExists)
-			return
-		}
-
-		utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
+		error_handlers.HandleBookError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusOK, book)
+	handlers.RespondWithSuccess(c, http.StatusOK, book)
 }
 
 // Delete Book
@@ -134,18 +105,14 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
+		handlers.RespondWithError(c, http.StatusBadRequest, constants.ErrInvalidBookID)
 		return
 	}
 
 	err = h.Service.DeleteBook(uint(id))
 	if err != nil {
-		if errors.Is(err, constants.ErrBookNotFound) {
-			utils.RespondWithError(c, http.StatusNotFound, constants.ErrBookNotFound)
-		} else {
-			utils.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)
-		}
+		error_handlers.HandleBookError(c, err)
 		return
 	}
-	utils.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{"id": id})
+	handlers.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{"id": id})
 }
