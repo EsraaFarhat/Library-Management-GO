@@ -11,10 +11,13 @@ func SetupBorrowRoutes(r *gin.Engine, borrowHandler *handlers.BorrowHandler) {
 	borrowRoutes := r.Group("/borrows")
 	{
 		borrowRoutes.Use(middlewares.AuthMiddleware())
-
 		borrowRoutes.POST("/", borrowHandler.BorrowBook)
-		borrowRoutes.GET("/", borrowHandler.GetBorrowRecords)
 		borrowRoutes.POST("/return", borrowHandler.ReturnBook)
+		// Get borrowed books for the logged-in user
+		borrowRoutes.GET("/my-borrows", borrowHandler.GetMyBorrows)
+
+		borrowRoutes.Use(middlewares.RoleMiddleware("admin"))
+		borrowRoutes.GET("/", borrowHandler.GetBorrowRecords)
 		borrowRoutes.GET("/user/:user_id", borrowHandler.GetUserBorrows)
 	}
 }

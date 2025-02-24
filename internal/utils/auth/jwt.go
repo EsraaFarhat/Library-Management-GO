@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"library-management/internal/constants"
 	"os"
 	"time"
@@ -50,7 +49,7 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		// Ensure the signing method is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+			return nil, constants.ErrInvalidSigningMethod
 		}
 		return jwtSecret, nil
 	})

@@ -7,7 +7,7 @@ type BookCreateRequest struct {
 	Title           string    `json:"title" validate:"required"`
 	Author          string    `json:"author" validate:"required"`
 	ISBN            string    `json:"isbn" validate:"required"`
-	CopiesAvailable int       `json:"copies_available" validate:"required,min=1"`
+	CopiesAvailable int       `json:"copies_available" validate:"required,min=0"`
 	PublishedAt     time.Time `json:"published_at" validate:"required"`
 }
 
@@ -16,7 +16,7 @@ type BookUpdateRequest struct {
 	Title           *string    `json:"title,omitempty"`
 	Author          *string    `json:"author,omitempty"`
 	ISBN            *string    `json:"isbn,omitempty"`
-	CopiesAvailable *int       `json:"copies_available,omitempty" validate:"omitempty,min=1"`
+	CopiesAvailable *int       `json:"copies_available,omitempty" validate:"omitempty,min=0"`
 	PublishedAt     *time.Time `json:"published_at,omitempty"`
 }
 

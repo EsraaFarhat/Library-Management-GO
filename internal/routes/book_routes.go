@@ -12,9 +12,11 @@ func SetupBookRoutes(r *gin.Engine, bookHandler *handlers.BookHandler) {
 	{
 		bookRoutes.Use(middlewares.AuthMiddleware())
 
-		bookRoutes.POST("/", bookHandler.CreateBook)
-		bookRoutes.GET("/", bookHandler.GetAllBooks)
 		bookRoutes.GET("/:id", bookHandler.GetBook)
+		bookRoutes.GET("/", bookHandler.GetAllBooks)
+
+		bookRoutes.Use(middlewares.RoleMiddleware("admin"))
+		bookRoutes.POST("/", bookHandler.CreateBook)
 		bookRoutes.PUT("/:id", bookHandler.UpdateBook)
 		bookRoutes.DELETE("/:id", bookHandler.DeleteBook)
 	}

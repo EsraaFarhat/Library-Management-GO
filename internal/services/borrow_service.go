@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"library-management/internal/constants"
 	"library-management/internal/dto"
 	"library-management/internal/models"
@@ -9,8 +8,8 @@ import (
 )
 
 type BorrowServiceInterface interface {
-	BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow, error)
-	ReturnBook(req dto.ReturnRequest) error
+	BorrowBook(req dto.BorrowCreateRequest, userIDUint uint) error
+	ReturnBook(req dto.ReturnRequest, userIDUint uint) error
 	GetBorrowRecords(page, limit int) ([]dto.BorrowResponse, int64, error)
 	GetUserBorrows(userID uint, page, limit int) ([]dto.BorrowResponse, int64, error)
 }
@@ -30,23 +29,16 @@ func NewBorrowService(borrowRepo repository.BorrowRepositoryInterface, bookRepo 
 }
 
 // BorrowBook handles borrowing a book
-func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow, error) {
-
-	// Check if the user exists
-	_, err := s.UserRepo.GetByID(req.UserID, []string{"id"})
-	if err != nil {
-		return nil, constants.ErrUserNotFound
-	}
-
+func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest, userIDUint uint) error {
 	// Check if the book exists
 	book, err := s.BookRepo.GetByID(req.BookID, nil)
 	if err != nil {
-		return nil, constants.ErrBookNotFound
+		return constants.ErrBookNotFound
 	}
 
 	// Ensure the book has available copies
 	if book.CopiesAvailable <= 0 {
-		return nil, errors.New("book is not available for borrowing")
+		return constants.ErrBookNotAvailable
 	}
 
 	// Check if the user has already borrowed this book
@@ -57,7 +49,7 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow,
 
 	// Create the borrow record
 	borrow := &models.Borrow{
-		UserID:  req.UserID,
+		UserID:  userIDUint,
 		BookID:  req.BookID,
 		DueDate: req.DueDate,
 	}
@@ -67,23 +59,23 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow,
 
 	if err := s.BorrowRepo.Create(borrow); err != nil {
 		borrowRepo.RollbackTransaction(tx)
-		return nil, err
+		return err
 	}
 
 	if err := s.BookRepo.DecreaseBookCopies(req.BookID); err != nil {
 		borrowRepo.RollbackTransaction(tx)
-		return nil, err
+		return err
 	}
 
 	borrowRepo.CommitTransaction(tx)
-	return borrow, nil
+	return nil
 }
 
 // ReturnBook handles returning a borrowed book
-func (s *BorrowService) ReturnBook(req dto.ReturnRequest) error {
+func (s *BorrowService) ReturnBook(req dto.ReturnRequest, userIDUint uint) error {
 
 	// Check if borrow record exists
-	borrow, err := s.BorrowRepo.GetBorrowRecord(req.UserID, req.BookID)
+	borrow, err := s.BorrowRepo.GetBorrowRecord(userIDUint, req.BookID)
 	if err != nil {
 		return constants.ErrBorrowNotFound
 	}

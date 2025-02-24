@@ -38,8 +38,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Store user ID in context
-		c.Set("user", claims.UserID)
+		// Store user ID and role in context
+		c.Set("user_id", claims.UserID)
 		c.Set("role", claims.Role)
 		c.Next()
 	}

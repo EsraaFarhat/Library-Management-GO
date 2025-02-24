@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"errors"
+	"library-management/internal/constants"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
@@ -59,5 +59,5 @@ func FormatValidationErrors(errs validator.ValidationErrors, structInstance inte
 	}
 
 	// Fallback error
-	return errors.New("invalid input")
+	return constants.ErrInvalidInput
 }

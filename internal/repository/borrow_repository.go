@@ -1,8 +1,7 @@
 package repository
 
 import (
-	"errors"
-
+	"library-management/internal/constants"
 	"library-management/internal/models"
 
 	"gorm.io/gorm"
@@ -71,7 +70,7 @@ func (r *BorrowRepository) GetBorrowRecord(userID, bookID uint) (*models.Borrow,
 	var borrow models.Borrow
 	err := r.DB.Where("user_id = ? AND book_id = ?", userID, bookID).First(&borrow).Error
 	if err != nil {
-		return nil, errors.New("borrow record not found")
+		return nil, constants.ErrBorrowNotFound
 	}
 	return &borrow, nil
 }

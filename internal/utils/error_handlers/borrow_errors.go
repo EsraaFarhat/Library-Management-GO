@@ -20,7 +20,8 @@ func HandleBorrowError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, constants.ErrUserNotFound),
 		errors.Is(err, constants.ErrBookNotFound),
-		errors.Is(err, constants.ErrBorrowNotFound):
+		errors.Is(err, constants.ErrBorrowNotFound),
+		errors.Is(err, constants.ErrBookNotAvailable):
 		handlers.RespondWithError(c, http.StatusBadRequest, err)
 	default:
 		handlers.RespondWithError(c, http.StatusInternalServerError, constants.ErrInternalServer)

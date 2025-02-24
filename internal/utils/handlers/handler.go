@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"library-management/internal/constants"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,11 @@ import (
 
 // BindAndValidate binds the request body to a struct and validates it
 func BindAndValidate(c *gin.Context, req interface{}) error {
-	if err := c.ShouldBindJSON(req); err != nil {
+	// Create a new decoder that disallows unknown fields
+	decoder := json.NewDecoder(c.Request.Body)
+	decoder.DisallowUnknownFields() // 👈 Prevent extra fields in JSON
+
+	if err := decoder.Decode(req); err != nil {
 		return constants.ErrInvalidInput
 	}
 
