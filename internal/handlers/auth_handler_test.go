@@ -18,9 +18,9 @@ import (
 func TestRegisterHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.AuthServiceInterface)
-	handler := handlers.NewAuthHandler(mockService) // reqBody := `{"email": "test@example.com", "password": "password123"}`
+	handler := handlers.NewAuthHandler(mockService) // reqBody := `{"email": "test@example.com", "password": "Aa12345@"}`
 
-	reqBody := `{"name": "test", "email": "test@example.com", "password": "password123"}`
+	reqBody := `{"name": "test", "email": "test@example.com", "password": "Aa12345@"}`
 	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -47,7 +47,7 @@ func TestRegisterHandler_EmailTaken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.AuthServiceInterface)
 	handler := handlers.NewAuthHandler(mockService)
-	reqBody := `{"name": "test", "email": "test@example.com", "password": "password123"}`
+	reqBody := `{"name": "test", "email": "test@example.com", "password": "Aa12345@"}`
 	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -65,7 +65,7 @@ func TestLoginHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.AuthServiceInterface)
 	handler := handlers.NewAuthHandler(mockService)
-	reqBody := `{"email": "test@example.com", "password": "password123"}`
+	reqBody := `{"email": "test@example.com", "password": "Aa12345@"}`
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -91,7 +91,7 @@ func TestLoginHandler_InvalidCredentials(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.AuthServiceInterface)
 	handler := handlers.NewAuthHandler(mockService)
-	reqBody := `{"email": "test@example.com", "password": "wrongpassword"}`
+	reqBody := `{"email": "test@example.com", "password": "Bb12789@"}`
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

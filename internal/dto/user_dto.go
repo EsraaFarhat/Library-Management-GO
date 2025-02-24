@@ -6,7 +6,7 @@ import "time"
 type UserCreateRequest struct {
 	Name     string `json:"name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required,password"`
 	Role     string `json:"role" validate:"omitempty,oneof=admin member"`
 }
 
@@ -14,7 +14,7 @@ type UserCreateRequest struct {
 type UserUpdateRequest struct {
 	Name     *string `json:"name,omitempty"`
 	Email    *string `json:"email,omitempty" validate:"email"`
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty" validate:"password"`
 	Role     *string `json:"role,omitempty" validate:"oneof=admin member"`
 }
 

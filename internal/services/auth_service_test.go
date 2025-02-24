@@ -21,7 +21,7 @@ func TestRegister_Success(t *testing.T) {
 	req := dto.UserRegisterRequest{
 		Name:     "John Doe",
 		Email:    "johna@example.com",
-		Password: "password123",
+		Password: "Aa12345@",
 	}
 
 	user := mappers.MapRegisterRequestToUser(req)
@@ -63,7 +63,7 @@ func TestLogin_Success(t *testing.T) {
 
 	req := dto.UserLoginRequest{
 		Email:    "johasn@example.com",
-		Password: "password123a",
+		Password: "Aa12345@",
 	}
 
 	hashedPassword, _ := auth.HashPassword(req.Password)
@@ -90,10 +90,10 @@ func TestLogin_InvalidPassword(t *testing.T) {
 
 	req := dto.UserLoginRequest{
 		Email:    "john@example.com",
-		Password: "wrongpassword",
+		Password: "Bb12789@",
 	}
 
-	hashedPassword, _ := auth.HashPassword("password123")
+	hashedPassword, _ := auth.HashPassword("Aa12345@")
 	user := models.User{
 		Email:    req.Email,
 		Password: hashedPassword,

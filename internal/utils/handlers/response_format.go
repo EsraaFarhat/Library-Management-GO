@@ -3,6 +3,7 @@ package handlers
 import (
 	"library-management/internal/constants"
 	"reflect"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -37,7 +38,9 @@ func FormatValidationErrors(errs validator.ValidationErrors, structInstance inte
 		jsonTag := e.Field() // Default to Go field name if no tag found
 		if found {
 			jsonTag = field.Tag.Get("json")
-			if jsonTag == "" {
+			if jsonTag != "" {
+				jsonTag = strings.Split(jsonTag, ",")[0]
+			} else {
 				jsonTag = e.Field()
 			}
 		}
@@ -53,6 +56,8 @@ func FormatValidationErrors(errs validator.ValidationErrors, structInstance inte
 			return &ValidationError{Message: jsonTag + " must be at least " + e.Param() + " characters long"}
 		case "oneof":
 			return &ValidationError{Message: jsonTag + " must be one of " + e.Param()} // Handle `oneof` tag
+		case "password":
+			return &ValidationError{Message: jsonTag + " must be at least 8 characters long, contain 1 uppercase, 1 lowercase, 1 number, and 1 special character"}
 		default:
 			return &ValidationError{Message: jsonTag + " is invalid"}
 		}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"library-management/internal/constants"
+	"library-management/internal/utils/validation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -19,6 +20,8 @@ func BindAndValidate(c *gin.Context, req interface{}) error {
 	}
 
 	validate := validator.New()
+	validate.RegisterValidation("password", validation.ValidatePassword)
+
 	if err := validate.Struct(req); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			return FormatValidationErrors(validationErrors, req)
