@@ -8,12 +8,36 @@ import (
 	"gorm.io/gorm"
 )
 
+type BorrowRepositoryInterface interface {
+	BeginTransaction() (*gorm.DB, BorrowRepositoryInterface)
+	CommitTransaction(tx *gorm.DB)
+	RollbackTransaction(tx *gorm.DB)
+	Create(borrow *models.Borrow) error
+	GetAll(page, limit int) ([]models.Borrow, int64, error)
+	GetBorrowRecord(userID, bookID uint) (*models.Borrow, error)
+	Delete(borrow *models.Borrow) error
+	GetBorrowsByUserID(userID uint, page, limit int) ([]models.Borrow, int64, error)
+}
+
 type BorrowRepository struct {
 	DB *gorm.DB
 }
 
-func NewBorrowRepository(db *gorm.DB) *BorrowRepository {
+func NewBorrowRepository(db *gorm.DB) BorrowRepositoryInterface {
 	return &BorrowRepository{DB: db}
+}
+
+func (r *BorrowRepository) BeginTransaction() (*gorm.DB, BorrowRepositoryInterface) {
+	tx := r.DB.Begin()
+	return tx, &BorrowRepository{DB: tx} // Return a new repository instance using the transaction
+}
+
+func (r *BorrowRepository) CommitTransaction(tx *gorm.DB) {
+	tx.Commit()
+}
+
+func (r *BorrowRepository) RollbackTransaction(tx *gorm.DB) {
+	tx.Rollback()
 }
 
 // Create a new borrow record

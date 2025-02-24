@@ -13,10 +13,10 @@ import (
 )
 
 type BookHandler struct {
-	Service *services.BookService
+	Service services.BookServiceInterface
 }
 
-func NewBookHandler(service *services.BookService) *BookHandler {
+func NewBookHandler(service services.BookServiceInterface) *BookHandler {
 	return &BookHandler{Service: service}
 }
 

@@ -9,11 +9,19 @@ import (
 	"strings"
 )
 
-type UserService struct {
-	Repo *repository.UserRepository
+type UserServiceInterface interface {
+	CreateUser(req dto.UserCreateRequest) (dto.UserResponse, error)
+	GetUser(id uint, fields []string) (dto.UserResponse, error)
+	GetAllUsers(page, limit int, fields []string) ([]dto.UserResponse, int64, error)
+	UpdateUser(id uint, req dto.UserUpdateRequest) (dto.UserResponse, error)
+	DeleteUser(id uint) error
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+type UserService struct {
+	Repo repository.UserRepositoryInterface
+}
+
+func NewUserService(repo repository.UserRepositoryInterface) UserServiceInterface {
 	return &UserService{Repo: repo}
 }
 

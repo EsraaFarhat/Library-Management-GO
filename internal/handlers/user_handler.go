@@ -14,10 +14,10 @@ import (
 )
 
 type UserHandler struct {
-	Service *services.UserService
+	Service services.UserServiceInterface
 }
 
-func NewUserHandler(service *services.UserService) *UserHandler {
+func NewUserHandler(service services.UserServiceInterface) *UserHandler {
 	return &UserHandler{Service: service}
 }
 

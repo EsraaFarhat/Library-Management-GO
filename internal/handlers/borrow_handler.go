@@ -13,10 +13,10 @@ import (
 )
 
 type BorrowHandler struct {
-	Service *services.BorrowService
+	Service services.BorrowServiceInterface
 }
 
-func NewBorrowHandler(service *services.BorrowService) *BorrowHandler {
+func NewBorrowHandler(service services.BorrowServiceInterface) *BorrowHandler {
 	return &BorrowHandler{Service: service}
 }
 

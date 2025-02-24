@@ -10,11 +10,22 @@ import (
 
 var defaultBookFields = []string{"id", "title", "author", "isbn", "copies_available", "published_at"}
 
+type BookRepositoryInterface interface {
+	Create(book *models.Book) (*models.Book, error)
+	GetByID(id uint, fields []string) (*models.Book, error)
+	GetAll(page, limit int, fields []string) ([]models.Book, int64, error)
+	GetByISBN(isbn string) (*models.Book, error)
+	Update(book *models.Book) error
+	Delete(id uint) error
+	DecreaseBookCopies(bookID uint) error
+	IncreaseBookCopies(bookID uint) error
+}
+
 type BookRepository struct {
 	DB *gorm.DB
 }
 
-func NewBookRepository(db *gorm.DB) *BookRepository {
+func NewBookRepository(db *gorm.DB) BookRepositoryInterface {
 	return &BookRepository{DB: db}
 }
 

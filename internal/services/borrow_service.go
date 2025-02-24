@@ -8,13 +8,20 @@ import (
 	"library-management/internal/repository"
 )
 
-type BorrowService struct {
-	BorrowRepo *repository.BorrowRepository
-	BookRepo   *repository.BookRepository
-	UserRepo   *repository.UserRepository
+type BorrowServiceInterface interface {
+	BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow, error)
+	ReturnBook(req dto.ReturnRequest) error
+	GetBorrowRecords(page, limit int) ([]dto.BorrowResponse, int64, error)
+	GetUserBorrows(userID uint, page, limit int) ([]dto.BorrowResponse, int64, error)
 }
 
-func NewBorrowService(borrowRepo *repository.BorrowRepository, bookRepo *repository.BookRepository, userRepo *repository.UserRepository) *BorrowService {
+type BorrowService struct {
+	BorrowRepo repository.BorrowRepositoryInterface
+	BookRepo   repository.BookRepositoryInterface
+	UserRepo   repository.UserRepositoryInterface
+}
+
+func NewBorrowService(borrowRepo repository.BorrowRepositoryInterface, bookRepo repository.BookRepositoryInterface, userRepo repository.UserRepositoryInterface) BorrowServiceInterface {
 	return &BorrowService{
 		BorrowRepo: borrowRepo,
 		BookRepo:   bookRepo,
@@ -56,19 +63,19 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest) (*models.Borrow,
 	}
 
 	// Start transaction
-	tx := s.BorrowRepo.DB.Begin()
+	tx, borrowRepo := s.BorrowRepo.BeginTransaction()
 
 	if err := s.BorrowRepo.Create(borrow); err != nil {
-		tx.Rollback()
+		borrowRepo.RollbackTransaction(tx)
 		return nil, err
 	}
 
 	if err := s.BookRepo.DecreaseBookCopies(req.BookID); err != nil {
-		tx.Rollback()
+		borrowRepo.RollbackTransaction(tx)
 		return nil, err
 	}
 
-	tx.Commit()
+	borrowRepo.CommitTransaction(tx)
 	return borrow, nil
 }
 
@@ -82,21 +89,21 @@ func (s *BorrowService) ReturnBook(req dto.ReturnRequest) error {
 	}
 
 	// Start transaction
-	tx := s.BorrowRepo.DB.Begin()
+	tx, borrowRepo := s.BorrowRepo.BeginTransaction()
 
 	// Delete the borrow record
 	if err := s.BorrowRepo.Delete(borrow); err != nil {
-		tx.Rollback()
+		borrowRepo.RollbackTransaction(tx)
 		return err
 	}
 
 	// Increase book copies only if it was borrowed
 	if err := s.BookRepo.IncreaseBookCopies(req.BookID); err != nil {
-		tx.Rollback()
+		borrowRepo.RollbackTransaction(tx)
 		return err
 	}
 
-	tx.Commit()
+	borrowRepo.CommitTransaction(tx)
 	return nil
 }
 

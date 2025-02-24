@@ -9,11 +9,16 @@ import (
 	"strings"
 )
 
-type AuthService struct {
-	Repo *repository.UserRepository
+type AuthServiceInterface interface {
+	Register(req dto.UserRegisterRequest) (string, dto.UserResponse, error)
+	Login(req dto.UserLoginRequest) (string, dto.UserResponse, error)
 }
 
-func NewAuthService(repo *repository.UserRepository) *AuthService {
+type AuthService struct {
+	Repo repository.UserRepositoryInterface
+}
+
+func NewAuthService(repo repository.UserRepositoryInterface) AuthServiceInterface {
 	return &AuthService{Repo: repo}
 }
 

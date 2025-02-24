@@ -7,11 +7,19 @@ import (
 	"library-management/internal/utils/mappers"
 )
 
-type BookService struct {
-	Repo *repository.BookRepository
+type BookServiceInterface interface {
+	CreateBook(req dto.BookCreateRequest) (dto.BookResponse, error)
+	GetBook(id uint, fields []string) (dto.BookResponse, error)
+	GetAllBooks(page, limit int, fields []string) ([]dto.BookResponse, int64, error)
+	UpdateBook(id uint, req dto.BookUpdateRequest) (dto.BookResponse, error)
+	DeleteBook(id uint) error
 }
 
-func NewBookService(repo *repository.BookRepository) *BookService {
+type BookService struct {
+	Repo repository.BookRepositoryInterface
+}
+
+func NewBookService(repo repository.BookRepositoryInterface) BookServiceInterface {
 	return &BookService{Repo: repo}
 }
 
