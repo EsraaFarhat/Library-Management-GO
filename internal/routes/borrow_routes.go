@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"library-management/internal/constants"
 	"library-management/internal/handlers"
 	middlewares "library-management/internal/middleware"
 
@@ -16,7 +17,7 @@ func SetupBorrowRoutes(r *gin.Engine, borrowHandler *handlers.BorrowHandler) {
 		// Get borrowed books for the logged-in user
 		borrowRoutes.GET("/my-borrows", borrowHandler.GetMyBorrows)
 
-		borrowRoutes.Use(middlewares.RoleMiddleware("admin"))
+		borrowRoutes.Use(middlewares.RoleMiddleware(string(constants.Admin)))
 		borrowRoutes.GET("/", borrowHandler.GetBorrowRecords)
 		borrowRoutes.GET("/user/:user_id", borrowHandler.GetUserBorrows)
 	}

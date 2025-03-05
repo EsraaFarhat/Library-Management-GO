@@ -7,8 +7,8 @@
 .air.debug
 
 # Go Modules & Dependencies
-go.sum
-go.mod
+# go.sum
+# go.mod
 
 # Environment Variables
 .env

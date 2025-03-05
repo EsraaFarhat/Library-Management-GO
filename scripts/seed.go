@@ -39,6 +39,11 @@ func HashPassword(password string) (string, error) {
 }
 
 func main() {
+	// Load .env file
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
 	// Load environment variables
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")

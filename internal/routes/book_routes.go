@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"library-management/internal/constants"
 	"library-management/internal/handlers"
 	middlewares "library-management/internal/middleware"
 
@@ -15,7 +16,7 @@ func SetupBookRoutes(r *gin.Engine, bookHandler *handlers.BookHandler) {
 		bookRoutes.GET("/:id", bookHandler.GetBook)
 		bookRoutes.GET("/", bookHandler.GetAllBooks)
 
-		bookRoutes.Use(middlewares.RoleMiddleware("admin"))
+		bookRoutes.Use(middlewares.RoleMiddleware(string(constants.Admin)))
 		bookRoutes.POST("/", bookHandler.CreateBook)
 		bookRoutes.PUT("/:id", bookHandler.UpdateBook)
 		bookRoutes.DELETE("/:id", bookHandler.DeleteBook)

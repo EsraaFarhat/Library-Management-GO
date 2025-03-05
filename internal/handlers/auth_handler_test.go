@@ -18,7 +18,7 @@ import (
 func TestRegisterHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.AuthServiceInterface)
-	handler := handlers.NewAuthHandler(mockService) // reqBody := `{"email": "test@example.com", "password": "Aa12345@"}`
+	handler := handlers.NewAuthHandler(mockService)
 
 	reqBody := `{"name": "test", "email": "test@example.com", "password": "Aa12345@"}`
 	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(reqBody))

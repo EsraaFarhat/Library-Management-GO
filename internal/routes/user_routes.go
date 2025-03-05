@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"library-management/internal/constants"
 	"library-management/internal/handlers"
 	middlewares "library-management/internal/middleware"
 
@@ -11,7 +12,7 @@ func SetupUserRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
 	userRoutes := r.Group("/users")
 	{
 		userRoutes.Use(middlewares.AuthMiddleware())
-		userRoutes.Use(middlewares.RoleMiddleware("admin"))
+		userRoutes.Use(middlewares.RoleMiddleware(string(constants.Admin)))
 
 		userRoutes.POST("/", userHandler.CreateUser)
 		userRoutes.GET("/", userHandler.GetAllUsers)

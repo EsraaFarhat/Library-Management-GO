@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app # Use the app stage from the Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -33,6 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: seeder # Use the seeder stage from the Dockerfile
     depends_on:
      db:
         condition: service_healthy

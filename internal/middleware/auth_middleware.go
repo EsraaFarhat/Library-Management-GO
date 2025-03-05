@@ -16,7 +16,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-
 			handlers.RespondWithError(c, http.StatusUnauthorized, constants.ErrMissingAuthHeader)
 			c.Abort()
 			return

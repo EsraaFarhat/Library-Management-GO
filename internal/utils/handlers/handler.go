@@ -13,7 +13,7 @@ import (
 func BindAndValidate(c *gin.Context, req interface{}) error {
 	// Create a new decoder that disallows unknown fields
 	decoder := json.NewDecoder(c.Request.Body)
-	decoder.DisallowUnknownFields() // 👈 Prevent extra fields in JSON
+	decoder.DisallowUnknownFields() // Prevent extra fields in JSON
 
 	if err := decoder.Decode(req); err != nil {
 		return constants.ErrInvalidInput

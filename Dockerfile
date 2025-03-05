@@ -4,8 +4,6 @@ FROM golang:1.22-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install dependencies for bcrypt hashing
-RUN apk add --no-cache git gcc musl-dev
 
 # Copy the Go module files
 COPY go.mod go.sum ./
@@ -22,21 +20,29 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o library-management ./cmd/main.go
 # Build the seeder
 RUN CGO_ENABLED=0 GOOS=linux go build -o seeder ./scripts/seed.go
 
-#  Final lightweight image
-FROM alpine:latest
+#  Final lightweight image for the application
+FROM alpine:latest AS app
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the binary from the builder stage
+# Copy the application binary from the builder stage
 COPY --from=builder /app/library-management .
-COPY --from=builder /app/seeder .
-
-# Install Go runtime for running the seeder script
-RUN apk add --no-cache go libc6-compat
 
 # Expose the port your application will run on
 EXPOSE 8080
 
 # Command to run the application
 CMD ["./library-management"]
+
+# Final lightweight image for the seeder
+FROM alpine:latest AS seeder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the seeder binary from the builder stage
+COPY --from=builder /app/seeder .
+
+# Command to run the seeder
+CMD ["./seeder"]
