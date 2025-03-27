@@ -10,7 +10,7 @@ type BorrowCreateRequest struct {
 
 type ReturnRequest struct {
 	// UserID uint `json:"user_id" validate:"required"`
-	BookID uint `json:"book_id" validate:"required"`
+	BorrowID uint `json:"borrow_id" validate:"required"`
 }
 
 type BorrowResponse struct {

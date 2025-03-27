@@ -75,7 +75,7 @@ func (s *BorrowService) BorrowBook(req dto.BorrowCreateRequest, userIDUint uint)
 func (s *BorrowService) ReturnBook(req dto.ReturnRequest, userIDUint uint) error {
 
 	// Check if borrow record exists
-	borrow, err := s.BorrowRepo.GetBorrowRecord(userIDUint, req.BookID)
+	borrow, err := s.BorrowRepo.GetBorrowRecord(userIDUint, req.BorrowID)
 	if err != nil {
 		return constants.ErrBorrowNotFound
 	}
@@ -90,7 +90,7 @@ func (s *BorrowService) ReturnBook(req dto.ReturnRequest, userIDUint uint) error
 	}
 
 	// Increase book copies only if it was borrowed
-	if err := s.BookRepo.IncreaseBookCopies(req.BookID); err != nil {
+	if err := s.BookRepo.IncreaseBookCopies(borrow.BookID); err != nil {
 		borrowRepo.RollbackTransaction(tx)
 		return err
 	}

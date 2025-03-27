@@ -66,9 +66,9 @@ func (r *BorrowRepository) GetAll(page, limit int) ([]models.Borrow, int64, erro
 }
 
 // Get a borrow record by UserID and BookID
-func (r *BorrowRepository) GetBorrowRecord(userID, bookID uint) (*models.Borrow, error) {
+func (r *BorrowRepository) GetBorrowRecord(userID, BorrowID uint) (*models.Borrow, error) {
 	var borrow models.Borrow
-	err := r.DB.Where("user_id = ? AND book_id = ?", userID, bookID).First(&borrow).Error
+	err := r.DB.Where("user_id = ? AND id = ?", userID, BorrowID).First(&borrow).Error
 	if err != nil {
 		return nil, constants.ErrBorrowNotFound
 	}

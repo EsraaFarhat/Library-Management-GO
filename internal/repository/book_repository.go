@@ -121,7 +121,8 @@ func (r *BookRepository) DecreaseBookCopies(bookID uint) error {
 func (r *BookRepository) IncreaseBookCopies(bookID uint) error {
 	book, err := r.GetByID(bookID, nil)
 	if err != nil {
-		return err
+		// do nothing (in case the book was deleted)
+		return nil
 	}
 	book.CopiesAvailable += 1
 	return r.DB.Save(&book).Error
