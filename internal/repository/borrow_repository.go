@@ -95,7 +95,9 @@ func (r *BorrowRepository) GetBorrowsByUserID(userID uint, page, limit int) ([]m
 	err := r.DB.Where("user_id = ?", userID).
 		Offset(offset).
 		Limit(limit).
-		Preload("Book").
+		Preload("Book", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped() // This ensures soft-deleted books are included
+		}).
 		// Preload("User").
 		Find(&borrows).Error
 	if err != nil {
